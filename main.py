@@ -66,7 +66,6 @@ def scrape(link):
 
 classes = {
     'http://itukraine.org.ua/en/news': 'item clearfix',
-    'https://news.vice.com/hub/sections': 'model'
 }
 
 
