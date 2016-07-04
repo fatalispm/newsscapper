@@ -72,3 +72,11 @@ classes = {
 def articles(site):
     links = get_links_to_articles(site, classes[site])
     return map(scrape, links)
+
+
+if __name__ == '__main__':
+
+    filtered_articles = filter(lambda x:x.was_published_recently, articles('http://itukraine.org.ua/en/news'))
+
+    for a in filtered_articles:
+        print a.text
