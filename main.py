@@ -1,10 +1,14 @@
 import urllib2
-from itertools import takewhile
+from datetime import datetime
+from urlparse import urlparse
 
 import newspaper
-from datetime import datetime
-
 from bs4 import BeautifulSoup
+
+
+def get_domain(url):
+    parsed_uri = urlparse(url)
+    return '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
 
 
 class Article(object):
@@ -14,9 +18,6 @@ class Article(object):
         self.author = author
         self.date = date
         self.url = url
-
-    def __repr__(self):
-        return "%s: %s" % (self.title, self.author)
 
     @classmethod
     def from_newspaper_article(cls, article):
@@ -41,13 +42,14 @@ def get_page(url):
     return BeautifulSoup(page)
 
 
-def get_links_to_articles(url):
+def get_links_to_articles(url, class_):
     page = get_page(url)
-    news = page.findAll("div", {"class": "item clearfix"})
+    news = page.findAll("div", {"class": class_})
+    domain = get_domain(url)
 
     def get_link(x):
         try:
-            return x.find("a")['href']
+            return domain + x.findAll("a")[-1]['href']
         except:
             return
 
@@ -56,11 +58,18 @@ def get_links_to_articles(url):
 
 
 def scrape(link):
-    article = newspaper.Article(link)
-    article.build()
+    article = newspaper.Article(url=link)
+    article.download()
+    article.parse()
     return Article.from_newspaper_article(article)
 
 
-def articles():
-    url = "http://itukraine.org.ua/en/news"
-    return scrape(get_links_to_articles(url))
+classes = {
+    'http://itukraine.org.ua/en/news': 'item clearfix',
+    'https://news.vice.com/hub/sections': 'model'
+}
+
+
+def articles(site):
+    links = get_links_to_articles(site, classes[site])
+    return map(scrape, links)
